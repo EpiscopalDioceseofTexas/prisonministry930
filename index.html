@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Episcopal Diocese of Texas — TDCJ Ministry Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;color:#1a1a1a;height:100%;min-height:100vh;display:flex;flex-direction:column}
+header{background:#2d1654;color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0}
+header h1{font-size:16px;font-weight:500;letter-spacing:0.01em}
+header p{font-size:11px;opacity:0.6;margin-top:2px}
+.nav-bar{display:flex;align-items:center;gap:8px;padding:10px 20px;background:#fff;border-bottom:1px solid #e0ddd8;flex-shrink:0;flex-wrap:wrap}
+.nav-label{font-size:11px;color:#888;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;margin-right:4px}
+.rbtn{padding:5px 13px;border:1px solid #ccc;border-radius:16px;font-size:12px;cursor:pointer;background:#fff;color:#555;transition:all 0.15s;font-weight:400}
+.rbtn:hover{background:#f0ece8;border-color:#999}
+.rbtn.active{color:#fff!important;border-color:transparent;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,0.3)}
+#map{flex:1;width:100%;min-height:400px}
+.legend{position:absolute;bottom:32px;right:12px;z-index:999;background:rgba(255,255,255,0.96);border-radius:10px;border:1px solid #ddd;padding:12px 14px;font-size:12px;line-height:1.9;box-shadow:0 2px 12px rgba(0,0,0,0.1)}
+.legend-title{font-size:10px;font-weight:600;letter-spacing:0.08em;color:#888;text-transform:uppercase;margin-bottom:6px}
+.leg-row{display:flex;align-items:center;gap:8px}
+.cross-icon{font-size:16px;font-weight:900;color:#7b2fa8;line-height:1;width:18px;text-align:center}
+.dot-icon{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.divider{height:1px;background:#eee;margin:7px 0}
+.region-badge{display:inline-block;width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.info-panel{position:absolute;bottom:32px;left:12px;z-index:999;background:rgba(255,255,255,0.96);border-radius:10px;border:1px solid #ddd;padding:12px 14px;font-size:11px;color:#555;max-width:220px;box-shadow:0 2px 12px rgba(0,0,0,0.1)}
+.info-panel strong{display:block;font-size:13px;color:#1a1a1a;margin-bottom:4px}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Episcopal Diocese of Texas — TDCJ Prison Ministry Map</h1>
+    <p>Episcopal churches and TDCJ prison locations by TDCJ Region · Diocese boundary shown in purple</p>
+  </div>
+  <div style="font-size:11px;opacity:0.65;text-align:right">Culture Blend Expansion Planning</div>
+</header>
+<div class="nav-bar">
+  <span class="nav-label">View:</span>
+  <button class="rbtn active" id="btn-all" onclick="showRegion('all')">All Regions</button>
+  <button class="rbtn" id="btn-1" onclick="showRegion(1)">Region I</button>
+  <button class="rbtn" id="btn-2" onclick="showRegion(2)">Region II</button>
+  <button class="rbtn" id="btn-3" onclick="showRegion(3)">Region III</button>
+  <button class="rbtn" id="btn-4" onclick="showRegion(4)">Region IV</button>
+  <button class="rbtn" id="btn-5" onclick="showRegion(5)">Region V</button>
+  <button class="rbtn" id="btn-6" onclick="showRegion(6)">Region VI</button>
+</div>
+<div style="position:relative;flex:1;min-height:400px;display:flex;flex-direction:column">
+  <div id="map" style="flex:1;min-height:400px"></div>
+  <div class="legend">
+    <div class="legend-title">Map Legend</div>
+    <div class="leg-row"><span class="cross-icon">✝</span> Episcopal Church (EDOT)</div>
+    <div class="leg-row" style="margin-top:4px"><span style="display:inline-block;width:20px;height:20px;background:#888;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 3px #888;flex-shrink:0"></span> <span style="margin-left:4px">Release prison</span></div>
+    <div class="leg-row"><span style="display:inline-block;width:16px;height:16px;background:#888;border:3px solid #e65100;border-radius:50%;flex-shrink:0"></span> <span style="margin-left:4px">Pre-release prison</span></div>
+    <div class="leg-row"><span style="display:inline-block;width:12px;height:12px;background:#888;border:2px solid rgba(0,0,0,0.3);border-radius:50%;flex-shrink:0"></span> <span style="margin-left:4px">Other prison</span></div>
+    <div class="divider"></div>
+    <div class="legend-title" style="margin-top:2px">TDCJ Region</div>
+    <div class="leg-row"><span class="region-badge" style="background:#c0392b"></span> Region I — East TX</div>
+    <div class="leg-row"><span class="region-badge" style="background:#1565c0"></span> Region II — North TX</div>
+    <div class="leg-row"><span class="region-badge" style="background:#2e7d32"></span> Region III — Houston</div>
+    <div class="leg-row"><span class="region-badge" style="background:#e65100"></span> Region IV — South TX</div>
+    <div class="leg-row"><span class="region-badge" style="background:#6a1b9a"></span> Region V — West TX</div>
+    <div class="leg-row"><span class="region-badge" style="background:#00695c"></span> Region VI — Central TX</div>
+    <div class="divider"></div>
+    <div class="leg-row" style="font-size:11px;color:#7b2fa8">▬▬ Diocese of Texas boundary</div>
+  </div>
+  <div class="info-panel" id="infoPanel">
+    <strong>All Regions</strong>
+    Click a region button to zoom in. Purple boundary shows the Episcopal Diocese of Texas. <span style="color:#7b2fa8;font-weight:700">✝</span> = church, colored dot = prison.
+  </div>
+</div>
+
+<script>
+const TDCJ_UNITS = [{"name": "Huntsville (Walls)", "city": "Huntsville", "region": 1, "lat": 30.7235, "lng": -95.5507, "release": true}, {"name": "Estelle", "city": "Huntsville", "region": 1, "lat": 30.682, "lng": -95.562, "release": true}, {"name": "Byrd", "city": "Huntsville", "region": 1, "lat": 30.69, "lng": -95.58}, {"name": "Goree", "city": "Huntsville", "region": 1, "lat": 30.735, "lng": -95.52}, {"name": "Wynne", "city": "Huntsville", "region": 1, "lat": 30.71, "lng": -95.54}, {"name": "Holliday", "city": "Huntsville", "region": 1, "lat": 30.715, "lng": -95.53}, {"name": "Ellis", "city": "Huntsville", "region": 1, "lat": 30.675, "lng": -95.57}, {"name": "Ferguson", "city": "Midway", "region": 1, "lat": 31.03, "lng": -95.92}, {"name": "Eastham", "city": "Lovelady", "region": 1, "lat": 31.13, "lng": -95.68}, {"name": "Polunsky", "city": "Livingston", "region": 1, "lat": 30.67, "lng": -95.04}, {"name": "Lewis", "city": "Woodville", "region": 1, "lat": 30.78, "lng": -94.42}, {"name": "Diboll", "city": "Diboll", "region": 1, "lat": 31.18, "lng": -94.79, "preRelease": true}, {"name": "Goodman", "city": "Jasper", "region": 1, "lat": 30.93, "lng": -94.01}, {"name": "Hutchins", "city": "Dallas", "region": 2, "lat": 32.6415, "lng": -96.7076, "release": true}, {"name": "Estes", "city": "Venus", "region": 2, "lat": 32.431, "lng": -97.103, "release": true, "preRelease": true}, {"name": "Cole", "city": "Bonham", "region": 2, "lat": 33.596, "lng": -96.188}, {"name": "Moore C.", "city": "Bonham", "region": 2, "lat": 33.58, "lng": -96.19}, {"name": "Bridgeport", "city": "Bridgeport", "region": 2, "lat": 33.205, "lng": -97.753}, {"name": "Mineral Wells", "city": "Mineral Wells", "region": 2, "lat": 32.809, "lng": -98.11}, {"name": "Lindsey", "city": "Jacksboro", "region": 2, "lat": 33.222, "lng": -98.16}, {"name": "Johnston", "city": "Winnsboro", "region": 2, "lat": 33.026, "lng": -95.105}, {"name": "Coffield", "city": "Tennessee Colony", "region": 2, "lat": 31.756, "lng": -95.635}, {"name": "Michael", "city": "Tennessee Colony", "region": 2, "lat": 31.76, "lng": -95.64}, {"name": "Beto", "city": "Tennessee Colony", "region": 2, "lat": 31.765, "lng": -95.65}, {"name": "Gurney", "city": "Tennessee Colony", "region": 2, "lat": 31.75, "lng": -95.63, "preRelease": true}, {"name": "Powledge", "city": "Palestine", "region": 2, "lat": 31.801, "lng": -95.705}, {"name": "Moore B.", "city": "Overton", "region": 2, "lat": 32.275, "lng": -94.97}, {"name": "Marlin", "city": "Marlin", "region": 2, "lat": 31.305, "lng": -96.899}, {"name": "Hughes", "city": "Gatesville", "region": 2, "lat": 31.435, "lng": -97.743}, {"name": "Telford", "city": "New Boston", "region": 2, "lat": 33.457, "lng": -94.416}, {"name": "Boyd", "city": "Teague", "region": 2, "lat": 31.626, "lng": -96.284}, {"name": "Lychner", "city": "Humble", "region": 3, "lat": 29.9902, "lng": -95.238, "release": true}, {"name": "South Texas ISF", "city": "Houston", "region": 3, "lat": 29.722, "lng": -95.278}, {"name": "Kegans", "city": "Houston", "region": 3, "lat": 29.735, "lng": -95.36}, {"name": "Jester I", "city": "Richmond", "region": 3, "lat": 29.57, "lng": -95.75}, {"name": "Jester III", "city": "Richmond", "region": 3, "lat": 29.575, "lng": -95.745}, {"name": "Ramsey", "city": "Rosharon", "region": 3, "lat": 29.364, "lng": -95.56}, {"name": "Vance", "city": "Richmond", "region": 3, "lat": 29.58, "lng": -95.74}, {"name": "Darrington", "city": "Rosharon", "region": 3, "lat": 29.37, "lng": -95.57}, {"name": "Stringfellow", "city": "Rosharon", "region": 3, "lat": 29.366, "lng": -95.564}, {"name": "Terrell", "city": "Rosharon", "region": 3, "lat": 29.355, "lng": -95.58}, {"name": "Hightower", "city": "Dayton", "region": 3, "lat": 29.907, "lng": -94.9}, {"name": "Bell (Cleveland)", "city": "Cleveland", "region": 3, "lat": 30.339, "lng": -95.089, "preRelease": true}, {"name": "Scott", "city": "Angleton", "region": 3, "lat": 29.167, "lng": -95.432}, {"name": "Clemens", "city": "Brazoria", "region": 3, "lat": 29.05, "lng": -95.57}, {"name": "Gist", "city": "Beaumont", "region": 3, "lat": 30.1, "lng": -94.13}, {"name": "LeBlanc", "city": "Beaumont", "region": 3, "lat": 30.09, "lng": -94.12, "preRelease": true}, {"name": "Stiles", "city": "Beaumont", "region": 3, "lat": 30.08, "lng": -94.14}, {"name": "Memorial", "city": "Rosharon", "region": 3, "lat": 29.36, "lng": -95.565}, {"name": "Stevenson", "city": "Cuero", "region": 3, "lat": 29.097, "lng": -97.289}, {"name": "Travis", "city": "Austin", "region": 4, "lat": 30.2672, "lng": -97.7431, "release": true}, {"name": "Kyle", "city": "Kyle", "region": 4, "lat": 29.989, "lng": -97.877}, {"name": "Dominguez", "city": "San Antonio", "region": 4, "lat": 29.4241, "lng": -98.4936}, {"name": "Bartlett", "city": "Bartlett", "region": 4, "lat": 30.793, "lng": -97.429}, {"name": "Connally", "city": "Kenedy", "region": 4, "lat": 28.818, "lng": -97.847}, {"name": "McConnell", "city": "Beeville", "region": 4, "lat": 28.396, "lng": -97.747}, {"name": "Garza East", "city": "Beeville", "region": 4, "lat": 28.4, "lng": -97.76}, {"name": "Garza West", "city": "Beeville", "region": 4, "lat": 28.41, "lng": -97.77}, {"name": "Briscoe", "city": "Dilley", "region": 4, "lat": 28.662, "lng": -99.172}, {"name": "Cotulla", "city": "Cotulla", "region": 4, "lat": 28.436, "lng": -99.234}, {"name": "Torres", "city": "Hondo", "region": 4, "lat": 29.346, "lng": -99.14}, {"name": "Ney", "city": "Hondo", "region": 4, "lat": 29.35, "lng": -99.145}, {"name": "Lynaugh", "city": "Fort Stockton", "region": 4, "lat": 30.893, "lng": -102.879}, {"name": "Lopez", "city": "Edinburg", "region": 4, "lat": 26.3017, "lng": -98.1633}, {"name": "Segovia", "city": "Edinburg", "region": 4, "lat": 26.31, "lng": -98.17, "preRelease": true}, {"name": "Willacy", "city": "Raymondville", "region": 4, "lat": 26.48, "lng": -97.784}, {"name": "San Saba", "city": "San Saba", "region": 4, "lat": 31.196, "lng": -98.724}, {"name": "Robertson", "city": "Abilene", "region": 5, "lat": 32.4487, "lng": -99.7331, "release": true}, {"name": "Middleton", "city": "Abilene", "region": 5, "lat": 32.46, "lng": -99.75}, {"name": "Allred", "city": "Iowa Park", "region": 5, "lat": 33.972, "lng": -98.682}, {"name": "Sayle", "city": "Breckenridge", "region": 5, "lat": 32.754, "lng": -98.9}, {"name": "Havins", "city": "Brownwood", "region": 6, "lat": 31.709, "lng": -98.991, "preRelease": true}, {"name": "Clements", "city": "Amarillo", "region": 5, "lat": 35.222, "lng": -101.8313}, {"name": "Jordan", "city": "Pampa", "region": 5, "lat": 35.537, "lng": -100.96}, {"name": "Daniel", "city": "Snyder", "region": 5, "lat": 32.7171, "lng": -100.9179}, {"name": "Formby", "city": "Plainview", "region": 5, "lat": 34.185, "lng": -101.707}, {"name": "Wheeler", "city": "Plainview", "region": 5, "lat": 34.18, "lng": -101.71}, {"name": "Smith", "city": "Lamesa", "region": 5, "lat": 32.7379, "lng": -101.951}, {"name": "Dalby", "city": "Post", "region": 5, "lat": 33.188, "lng": -101.379}, {"name": "Roach", "city": "Childress", "region": 5, "lat": 34.426, "lng": -100.205}, {"name": "Wallace", "city": "Colorado City", "region": 5, "lat": 32.386, "lng": -100.869}, {"name": "Dalhart", "city": "Dalhart", "region": 5, "lat": 36.059, "lng": -102.522}, {"name": "Marlin Unit", "city": "Marlin", "region": 6, "lat": 31.305, "lng": -96.899, "release": true}, {"name": "Hughes", "city": "Gatesville", "region": 6, "lat": 31.435, "lng": -97.743}, {"name": "Luther", "city": "Navasota", "region": 6, "lat": 30.39, "lng": -96.08}, {"name": "Pack", "city": "Navasota", "region": 6, "lat": 30.4, "lng": -96.09}, {"name": "Hamilton", "city": "Bryan", "region": 6, "lat": 30.6744, "lng": -96.3698, "preRelease": true}, {"name": "Coleman (F)", "city": "Lockhart", "region": 6, "lat": 29.8849, "lng": -97.6709}, {"name": "Crain (F)", "city": "Gatesville", "region": 6, "lat": 31.43, "lng": -97.73}, {"name": "Hilltop (F)", "city": "Gatesville", "region": 6, "lat": 31.44, "lng": -97.735}, {"name": "Hobby (F)", "city": "Marlin", "region": 6, "lat": 31.3, "lng": -96.89}, {"name": "Murray (F)", "city": "Gatesville", "region": 6, "lat": 31.435, "lng": -97.74}];
+const CHURCHES = [{"name": "All Saints', Austin", "lat": 30.2942, "lng": -97.7408}, {"name": "All Saints', Cameron", "lat": 30.8543, "lng": -96.9772}, {"name": "All Saints', Crockett", "lat": 31.3182, "lng": -95.4561}, {"name": "All Saints', Fort Worth", "lat": 32.6635, "lng": -97.372}, {"name": "All Souls, Arlington", "lat": 32.7357, "lng": -97.1081}, {"name": "Ascension, Houston", "lat": 29.7363, "lng": -95.5385}, {"name": "Calvary, Bastrop", "lat": 30.1107, "lng": -97.3153}, {"name": "Calvary, Richmond", "lat": 29.5819, "lng": -95.7607}, {"name": "Christ Church Cathedral, Houston", "lat": 29.7543, "lng": -95.3677}, {"name": "Christ Church, Cedar Park", "lat": 30.5218, "lng": -97.8202}, {"name": "Christ Church, Eagle Lake", "lat": 29.5902, "lng": -96.3327}, {"name": "Christ Church, Jefferson", "lat": 32.7596, "lng": -94.3477}, {"name": "Christ Church, Matagorda", "lat": 28.7072, "lng": -95.9657}, {"name": "Christ Church, Mexia", "lat": 31.6807, "lng": -96.4822}, {"name": "Christ Church, Nacogdoches", "lat": 31.6035, "lng": -94.6552}, {"name": "Christ Church, San Augustine", "lat": 31.5299, "lng": -94.1077}, {"name": "Christ Church, Temple", "lat": 31.0982, "lng": -97.3428}, {"name": "Christ Church, Tyler", "lat": 32.3513, "lng": -95.3011}, {"name": "Christ the King, Houston", "lat": 29.7105, "lng": -95.6358}, {"name": "Christ the King, Humble", "lat": 29.9988, "lng": -95.1794}, {"name": "Emmanuel, Houston", "lat": 29.7831, "lng": -95.6614}, {"name": "Epiphany, Burnet", "lat": 30.759, "lng": -98.2322}, {"name": "Epiphany, Calvert", "lat": 30.9807, "lng": -96.6697}, {"name": "Epiphany, Houston", "lat": 29.6679, "lng": -95.4942}, {"name": "Epiphany, Hurst", "lat": 32.8232, "lng": -97.1697}, {"name": "Espiritu Santo, Bryan", "lat": 30.6744, "lng": -96.37}, {"name": "Faith, Wichita Falls", "lat": 33.8851, "lng": -98.5306}, {"name": "Good Shepherd Indian, Stafford", "lat": 29.6161, "lng": -95.5583}, {"name": "Good Shepherd, Austin", "lat": 30.2966, "lng": -97.77}, {"name": "Good Shepherd, Friendswood", "lat": 29.5294, "lng": -95.201}, {"name": "Good Shepherd, Granbury", "lat": 32.4418, "lng": -97.7943}, {"name": "Good Shepherd, Kingwood", "lat": 29.9816, "lng": -95.2105}, {"name": "Good Shepherd, Tomball", "lat": 30.0974, "lng": -95.6163}, {"name": "Grace, Alvin", "lat": 29.4238, "lng": -95.2441}, {"name": "Grace, Galveston", "lat": 29.2874, "lng": -94.8275}, {"name": "Grace, Georgetown", "lat": 30.6382, "lng": -97.677}, {"name": "Grace, Houston", "lat": 29.6802, "lng": -95.4571}, {"name": "Holy Apostles, Katy", "lat": 29.7858, "lng": -95.8246}, {"name": "Holy Comforter, Angleton", "lat": 29.1693, "lng": -95.4313}, {"name": "Holy Comforter, Spring", "lat": 30.0799, "lng": -95.4172}, {"name": "Holy Cross, Sugar Land", "lat": 29.5524, "lng": -95.6771}, {"name": "Holy Family, Houston", "lat": 29.7577, "lng": -95.3427}, {"name": "Holy Innocents, Madisonville", "lat": 30.9574, "lng": -95.908}, {"name": "Holy Spirit, Houston", "lat": 29.7742, "lng": -95.506}, {"name": "Holy Spirit, Waco", "lat": 31.5315, "lng": -97.1888}, {"name": "Holy Trinity, Dickinson", "lat": 29.4608, "lng": -95.0516}, {"name": "Holy Trinity, Port Neches", "lat": 29.9844, "lng": -93.9527}, {"name": "Hope, Houston", "lat": 29.8135, "lng": -95.4207}, {"name": "Kiswahili Church, Huntsville", "lat": 30.7235, "lng": -95.5507}, {"name": "Lord of the Streets, Houston", "lat": 29.737, "lng": -95.3695}, {"name": "Mosaic, Pearland", "lat": 29.5635, "lng": -95.3241}, {"name": "Palmer Memorial, Houston", "lat": 29.7215, "lng": -95.3988}, {"name": "Resurrection, Austin", "lat": 30.3375, "lng": -97.7218}, {"name": "Resurrection, Decatur", "lat": 33.2343, "lng": -97.5841}, {"name": "San Esteban, Cleveland", "lat": 30.339, "lng": -95.089}, {"name": "San Francisco De Asis, Austin", "lat": 30.2231, "lng": -97.7814}, {"name": "San Mateo, Bellaire", "lat": 29.7066, "lng": -95.4583}, {"name": "St. Alban's, Arlington", "lat": 32.7357, "lng": -97.1344}, {"name": "St. Alban's, Fort Worth", "lat": 32.6895, "lng": -97.3698}, {"name": "St. Alban's, Waco", "lat": 31.5315, "lng": -97.1888}, {"name": "St. Andrew's, Bryan", "lat": 30.6744, "lng": -96.37}, {"name": "St. Andrew's, Fort Worth", "lat": 32.7254, "lng": -97.3208}, {"name": "St. Andrew's, Pearland", "lat": 29.5635, "lng": -95.306}, {"name": "St. Andrew's, Seguin", "lat": 29.5688, "lng": -97.9647}, {"name": "St. Anne's, DeSoto", "lat": 32.5896, "lng": -96.857}, {"name": "St. Augustine, Galveston", "lat": 29.297, "lng": -94.7977}, {"name": "St. Christopher, League City", "lat": 29.5075, "lng": -95.095}, {"name": "St. Christopher's, Fort Worth", "lat": 32.6728, "lng": -97.3825}, {"name": "St. Cuthbert, Austin", "lat": 30.4427, "lng": -97.7946}, {"name": "St. Cyprian's, Lufkin", "lat": 31.3382, "lng": -94.7291}, {"name": "St. David's, Austin", "lat": 30.2672, "lng": -97.7404}, {"name": "St. Dunstan's, Houston", "lat": 29.9827, "lng": -95.4624}, {"name": "St. Francis, College Station", "lat": 30.627, "lng": -96.3344}, {"name": "St. Francis of Assisi, Prairie View", "lat": 30.0921, "lng": -95.9874}, {"name": "St. George's, Austin", "lat": 30.2891, "lng": -97.7213}, {"name": "St. James, Conroe", "lat": 30.3118, "lng": -95.456}, {"name": "St. James, Texarkana", "lat": 33.4418, "lng": -94.0477}, {"name": "St. John the Baptist, Brenham", "lat": 30.1671, "lng": -96.3977}, {"name": "St. John's, Corsicana", "lat": 32.0954, "lng": -96.4689}, {"name": "St. John's, Fort Worth", "lat": 32.7215, "lng": -97.38}, {"name": "St. John's, LaGrange", "lat": 29.9052, "lng": -96.8766}, {"name": "St. John's, Marlin", "lat": 31.305, "lng": -96.899}, {"name": "St. John's, Silsbee", "lat": 30.3543, "lng": -94.1766}, {"name": "St. Luke's on the Lake, Austin", "lat": 30.381, "lng": -97.9338}, {"name": "St. Luke's, Houston", "lat": 29.7377, "lng": -95.4605}, {"name": "St. Mark's, Bay City", "lat": 28.9827, "lng": -95.9691}, {"name": "St. Mark's, Beaumont", "lat": 30.0802, "lng": -94.1266}, {"name": "St. Mark's, Houston", "lat": 29.711, "lng": -95.4538}, {"name": "St. Martin's, Houston", "lat": 29.7496, "lng": -95.4553}, {"name": "St. Mary's, Cypress", "lat": 29.9691, "lng": -95.6972}, {"name": "St. Matthew's Cathedral, Fort Worth", "lat": 32.7018, "lng": -97.2465}, {"name": "St. Michael & All Angels, Fort Worth", "lat": 32.735, "lng": -97.4427}, {"name": "St. Michael's, Austin", "lat": 30.297, "lng": -97.8022}, {"name": "St. Paul's, Waco", "lat": 31.5493, "lng": -97.1467}, {"name": "St. Peter & St. Paul, Arlington", "lat": 32.7084, "lng": -97.1191}, {"name": "St. Peter's, Brenham", "lat": 30.1671, "lng": -96.398}, {"name": "St. Stephen's, Beaumont", "lat": 30.1102, "lng": -94.2041}, {"name": "St. Stephen's, Houston", "lat": 29.7389, "lng": -95.3924}, {"name": "St. Thomas, Wharton", "lat": 29.3107, "lng": -96.0997}, {"name": "St. Thomas the Apostle, Nassau Bay", "lat": 29.5535, "lng": -95.0888}, {"name": "Trinity, Baytown", "lat": 29.7355, "lng": -94.9774}, {"name": "Trinity, Galveston", "lat": 29.3013, "lng": -94.7977}, {"name": "Trinity, Longview", "lat": 32.4932, "lng": -94.7405}, {"name": "Trinity, Lufkin", "lat": 31.3382, "lng": -94.7291}, {"name": "Trinity, Marshall", "lat": 32.5449, "lng": -94.3674}, {"name": "Trinity, Texas City", "lat": 29.3838, "lng": -94.9027}, {"name": "Trinity, The Woodlands", "lat": 30.1658, "lng": -95.4613},
+{"name": "St. Martin's, Copperas Cove", "lat": 31.1168, "lng": -97.9103},
+{"name": "St. Christopher's, Killeen", "lat": 31.0820, "lng": -97.7280}
+];
+const EDOT_GEOJSON = {"type":"FeatureCollection","features":[{"type":"Feature","properties":{"name":"Episcopal Diocese of Texas"},"geometry":{"type":"MultiPolygon","coordinates":[[[[-97.710215,30.024499],[-98.172977,30.356312],[-98.125556,30.426186],[-98.351041,30.486096],[-98.438995,30.673285],[-98.371905,30.740485],[-98.432098,30.78631],[-98.376877,30.83489],[-98.445782,30.921439],[-98.439687,31.029537],[-98.523459,31.088886],[-98.510341,31.155666],[-98.562739,31.230582],[-98.27107,31.416398],[-97.689834,31.711019],[-97.60523,31.587762],[-97.037266,31.863079],[-96.932215,31.708887],[-96.719114,31.814887],[-96.496713,31.796191],[-96.05478,32.012526],[-95.428512,32.084475],[-95.488733,32.232486],[-95.449165,32.355233],[-95.5943,32.479858],[-95.594541,32.687026],[-95.47297,32.606426],[-94.986935,32.537246],[-94.70179,32.652209],[-94.705878,32.879177],[-94.042886,32.881089],[-94.04272,31.999265],[-93.840029,31.800596],[-93.812477,31.715246],[-93.834924,31.586211],[-93.640805,31.372546],[-93.671676,31.299586],[-93.614402,31.260869],[-93.598828,31.174679],[-93.531744,31.180817],[-93.530936,30.924534],[-93.563292,30.818503],[-93.740045,30.538765],[-93.698302,30.438657],[-93.757654,30.390423],[-93.765822,30.333318],[-93.720575,30.295961],[-93.712101,30.067346],[-93.890679,29.843159],[-93.89847,29.771577],[-93.852868,29.675885],[-94.001406,29.681486],[-94.132577,29.646217],[-94.594853,29.467903],[-94.778691,29.361483],[-94.681541,29.471389],[-94.608557,29.483345],[-94.566674,29.531988],[-94.495025,29.525031],[-94.503429,29.54325],[-94.553988,29.573882],[-94.780938,29.531093],[-94.693154,29.694453],[-94.735271,29.785433],[-94.816085,29.75671],[-94.893107,29.661336],[-94.965963,29.70033],[-95.015636,29.639457],[-94.982706,29.601344],[-95.018253,29.554885],[-94.981916,29.511141],[-94.909465,29.496838],[-94.930861,29.450504],[-94.8908,29.433432],[-94.893994,29.30817],[-94.824953,29.306005],[-94.810696,29.353435],[-94.72253,29.331446],[-95.081773,29.111222],[-95.38239,28.866348],[-96.220376,28.491966],[-96.378616,28.383909],[-96.21505,28.509679],[-95.98616,28.606319],[-95.978526,28.650594],[-96.221784,28.580364],[-96.230944,28.641433],[-96.19583,28.69894],[-96.287942,28.683164],[-96.322921,28.64186],[-96.309178,28.963291],[-96.658466,29.263876],[-96.560555,29.335439],[-96.793132,29.577378],[-96.874222,29.632706],[-97.142643,29.628101],[-97.655257,30.072907],[-97.710215,30.024499]],[[-97.625288,30.87043],[-97.828512,30.906188],[-97.96286,30.785641],[-98.049886,30.624155],[-97.956734,30.628249],[-97.775211,30.429993],[-97.576167,30.501799],[-97.334463,30.402843],[-97.155219,30.457344],[-97.271418,30.735692],[-97.625288,30.87043]]],[[[-98.251211,31.980127],[-98.327499,31.941261],[-98.551158,32.261436],[-98.475133,32.298916],[-98.475177,32.513039],[-99.09605,32.514768],[-99.096016,32.957037],[-98.950875,32.956918],[-98.953938,33.397534],[-99.472444,33.399023],[-99.474498,33.733849],[-99.835143,33.8358],[-100.04848,33.835974],[-100.047028,34.22978],[-99.997621,34.224355],[-99.997853,34.561485],[-99.923211,34.574552],[-99.69497,34.378333],[-99.616793,34.375391],[-99.574367,34.418281],[-99.474161,34.398052],[-99.47565,33.834005],[-98.953088,33.834],[-98.952527,34.195621],[-98.76557,34.136376],[-98.599789,34.160571],[-98.475066,34.064269],[-98.364023,34.157109],[-98.16912,34.114171],[-98.08526,34.003259],[-97.94573,33.989839],[-97.977859,33.889929],[-97.877387,33.850236],[-97.671772,33.99137],[-97.589598,33.953554],[-97.587441,33.902479],[-97.484071,33.91568],[-97.487065,33.433681],[-97.383015,33.43289],[-97.39848,32.990839],[-97.032287,32.989324],[-97.038385,32.548662],[-97.086834,32.549428],[-97.086191,32.265451],[-97.476086,32.17346],[-97.516121,32.133612],[-97.615055,32.203581],[-98.208386,31.917511],[-98.251211,31.980127]]]]}}]};
+const REGION_COLORS = {"1": "#c0392b", "2": "#1565c0", "3": "#2e7d32", "4": "#e65100", "5": "#6a1b9a", "6": "#00695c"};
+const REGION_META = {"1": {"name": "Region I", "label": "East Texas / Huntsville", "center": [30.85, -95.5], "zoom": 8}, "2": {"name": "Region II", "label": "North / Northeast Texas", "center": [32.5, -96.2], "zoom": 7}, "3": {"name": "Region III", "label": "Houston / Gulf Coast", "center": [29.7, -95.5], "zoom": 8}, "4": {"name": "Region IV", "label": "South / Central Texas", "center": [28.5, -99.0], "zoom": 7}, "5": {"name": "Region V", "label": "West / Northwest Texas", "center": [33.0, -99.5], "zoom": 7}, "6": {"name": "Region VI", "label": "Central Texas", "center": [31.2, -97.5], "zoom": 8}};
+
+const REGION_STATS = {};
+for (let r = 1; r <= 6; r++) {
+  REGION_STATS[r] = {
+    prisons: TDCJ_UNITS.filter(u => u.region === r).length,
+    churches: 0
+  };
+}
+
+let map, edotLayer, prisonMarkers = [], churchMarkers = [];
+let currentRegion = 'all';
+
+function initMap() {
+  map = L.map('map', {center:[31.5,-97.5],zoom:6,zoomControl:true});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap contributors',subdomains:'abc',maxZoom:19
+  }).addTo(map);
+
+  // Diocese boundary — filled with subtle purple, bold purple border
+  edotLayer = L.geoJSON(EDOT_GEOJSON, {
+    style: {
+      fillColor: '#7b2fa8',
+      fillOpacity: 0.07,
+      color: '#7b2fa8',
+      weight: 2.5,
+      opacity: 0.85,
+      dashArray: null
+    }
+  }).addTo(map);
+
+  plotAll();
+}
+
+function makeCrossIcon(color) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="font-size:20px;font-weight:900;color:#7b2fa8;text-shadow:0 0 3px rgba(123,47,168,0.4);line-height:1;margin-top:-10px;margin-left:-6px;user-select:none">✝</div>`,
+    iconSize: [14,20],
+    iconAnchor: [7,10],
+    popupAnchor: [0,-10]
+  });
+}
+
+function makePrisonIcon(region, isRelease, isPreRelease) {
+  const color = REGION_COLORS[region] || '#555';
+  if (isRelease) {
+    return L.divIcon({
+      className: '',
+      html: `<div style="width:20px;height:20px;background:${color};border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 3px ${color},0 2px 8px rgba(0,0,0,0.35)"></div>`,
+      iconSize: [20,20],
+      iconAnchor: [10,10],
+      popupAnchor: [0,-10]
+    });
+  }
+  if (isPreRelease) {
+    return L.divIcon({
+      className: '',
+      html: `<div style="width:16px;height:16px;background:${color};border:3px solid #e65100;border-radius:50%;box-shadow:0 1px 5px rgba(0,0,0,0.3)"></div>`,
+      iconSize: [16,16],
+      iconAnchor: [8,8],
+      popupAnchor: [0,-8]
+    });
+  }
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:12px;height:12px;background:${color};border:2px solid rgba(0,0,0,0.3);border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.25)"></div>`,
+    iconSize: [12,12],
+    iconAnchor: [6,6],
+    popupAnchor: [0,-6]
+  });
+}
+
+function clearMarkers() {
+  prisonMarkers.forEach(m => map.removeLayer(m));
+  churchMarkers.forEach(m => map.removeLayer(m));
+  prisonMarkers = [];
+  churchMarkers = [];
+}
+
+function plotAll(regionFilter) {
+  clearMarkers();
+  const units = regionFilter ? TDCJ_UNITS.filter(u => u.region === regionFilter) : TDCJ_UNITS;
+  units.forEach(u => {
+    const m = L.marker([u.lat, u.lng], {icon: makePrisonIcon(u.region, u.release === true, u.preRelease === true), zIndexOffset: u.release ? 100 : u.preRelease ? 50 : 0}).addTo(map);
+    m.bindPopup(`<div style="font-family:sans-serif;min-width:160px"><strong style="font-size:13px;display:block;margin-bottom:3px">${u.name}</strong><span style="font-size:11px;color:#666">${u.city} · TDCJ Region ${u.region}</span>${u.release ? '<span style="display:inline-block;margin-top:5px;font-size:10px;background:#fff3e0;color:#e65100;border:1px solid #e65100;border-radius:4px;padding:1px 7px;font-weight:600">★ Release Unit</span>' : u.preRelease ? '<span style="display:inline-block;margin-top:5px;font-size:10px;background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d32;border-radius:4px;padding:1px 7px;font-weight:600">↗ Pre-Release</span>' : ''}</div>`);
+    prisonMarkers.push(m);
+  });
+
+  CHURCHES.forEach(c => {
+    const m = L.marker([c.lat, c.lng], {icon: makeCrossIcon()}).addTo(map);
+    m.bindPopup(`<div style="font-family:sans-serif;min-width:160px"><strong style="font-size:13px;display:block;margin-bottom:3px">✝ ${c.name}</strong><span style="font-size:11px;color:#666">Episcopal Diocese of Texas</span></div>`);
+    churchMarkers.push(m);
+  });
+}
+
+function showRegion(r) {
+  currentRegion = r;
+  document.querySelectorAll('.rbtn').forEach(b => { b.classList.remove('active'); b.style.background = ''; b.style.color = '#555'; });
+  const btn = document.getElementById(r === 'all' ? 'btn-all' : `btn-${r}`);
+  if (btn) {
+    btn.classList.add('active');
+    if (r !== 'all') btn.style.background = REGION_COLORS[r];
+    else btn.style.background = '#2d1654';
+  }
+
+  if (r === 'all') {
+    plotAll();
+    map.flyTo([31.5,-97.5], 6, {duration:0.8});
+    document.getElementById('infoPanel').innerHTML = `<strong>All Regions</strong>Showing all ${TDCJ_UNITS.length} TDCJ units and ${CHURCHES.length} Episcopal churches across the diocese.`;
+  } else {
+    const meta = REGION_META[r];
+    plotAll(r);
+    map.flyTo(meta.center, meta.zoom, {duration:0.8});
+    const pCount = TDCJ_UNITS.filter(u => u.region === r).length;
+    document.getElementById('infoPanel').innerHTML = `<strong>${meta.name} — ${meta.label}</strong>${pCount} TDCJ units shown. All ${CHURCHES.length} Episcopal churches shown.`;
+  }
+}
+
+window.addEventListener('load', () => {
+  initMap();
+  // Set initial button colors
+  document.getElementById('btn-all').style.background = '#2d1654';
+  [1,2,3,4,5,6].forEach(r => {
+    const b = document.getElementById(`btn-${r}`);
+    if (b) b.addEventListener('mouseover', () => { if(!b.classList.contains('active')) b.style.color = REGION_COLORS[r]; });
+    if (b) b.addEventListener('mouseout', () => { if(!b.classList.contains('active')) b.style.color = '#555'; });
+  });
+});
+</script>
+</body>
+</html>
